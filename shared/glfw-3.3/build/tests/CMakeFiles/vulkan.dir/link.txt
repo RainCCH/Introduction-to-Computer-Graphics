@@ -1,0 +1,1 @@
+/usr/bin/cc -rdynamic CMakeFiles/vulkan.dir/vulkan.c.o CMakeFiles/vulkan.dir/__/deps/glad_vulkan.c.o -o vulkan  ../src/libglfw3.a -lm -Wl,-Bstatic -lrt -Wl,-Bdynamic -lm -ldl -lX11 
