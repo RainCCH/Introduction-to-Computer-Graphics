@@ -1,6 +1,7 @@
 # Compilation of A1
 
 `premake4 gmake`
+
 `make`
 
 This is tested by the Virtual Machine provided by the TAs. I am using a Macbook with silicon chip.
