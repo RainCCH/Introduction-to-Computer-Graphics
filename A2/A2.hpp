@@ -10,10 +10,33 @@
 
 #include <vector>
 
+using namespace glm;
+
 // Set a global maximum number of vertices in order to pre-allocate VBO data
 // in one shot, rather than reallocating each frame.
 const GLsizei kMaxVertices = 1000;
 
+class line3d{
+	public:
+		line3d(vec4 st, vec4 e, vec3 c){
+			start = st;
+			end = e;
+			colour = c;
+		};
+		vec4 start;
+		vec4 end;
+		vec3 colour;
+};
+
+enum IntersectionMode{
+	ROTATE_VIEW,
+	TRANSLATE_VIEW,
+	PERSPECTIVE,
+	ROTATE_MODEL,
+	TRANSLATE_MODEL,
+	SCALE_MODEL,
+	VIEWPORT
+};
 
 // Convenience class for storing vertex data in CPU memory.
 // Data should be copied over to GPU memory via VBO storage before rendering.
@@ -61,15 +84,29 @@ protected:
 			const glm::vec2 & v0,
 			const glm::vec2 & v1
 	);
+	void draw3dlines(std::vector<line3d> lines);
+	void update_rotation_model(float theta, int coor);
+	void update_translate_model(float dx, float dy, float dz);
+	void update_scale_model(float sx, float sy, float sz);
 
 	ShaderProgram m_shader;
 
 	GLuint m_vao;            // Vertex Array Object
 	GLuint m_vbo_positions;  // Vertex Buffer Object
 	GLuint m_vbo_colours;    // Vertex Buffer Object
+	float m_prev_mouse_x;
+	float m_prev_mouse_y;
+	bool m_mouse_clicked[3];
 
 	VertexData m_vertexData;
 
 	glm::vec3 m_currentLineColour;
+	glm::mat4 m_rotation_model;
+	glm::mat4 m_translate_model;
+	glm::mat4 m_scale_model;
 
+	// my own code:
+	IntersectionMode interaction_mode;
+	std::vector<line3d> getcubeLines();
+	std::vector<line3d> transformLines(std::vector<line3d> lines, glm::mat4 T);
 };

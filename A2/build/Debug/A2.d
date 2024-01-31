@@ -1,4 +1,10 @@
-Debug/A1.o: ../A1.cpp ../A1.hpp ../../shared/include/glm/glm.hpp \
+Debug/A2.o: ../A2.cpp ../A2.hpp \
+ ../../shared/cs488-framework/CS488Window.hpp \
+ ../../shared/include/GLFW/glfw3.h ../../shared/gl3w/GL/glcorearb.h \
+ ../../shared/cs488-framework/OpenGLImport.hpp \
+ ../../shared/gl3w/GL/gl3w.h \
+ ../../shared/cs488-framework/ShaderProgram.hpp \
+ ../../shared/include/glm/glm.hpp \
  ../../shared/include/glm/detail/_fixes.hpp \
  ../../shared/include/glm/fwd.hpp \
  ../../shared/include/glm/detail/type_int.hpp \
@@ -73,11 +79,6 @@ Debug/A1.o: ../A1.cpp ../A1.hpp ../../shared/include/glm/glm.hpp \
  ../../shared/include/glm/integer.hpp \
  ../../shared/include/glm/detail/func_integer.hpp \
  ../../shared/include/glm/detail/func_integer.inl \
- ../../shared/cs488-framework/CS488Window.hpp \
- ../../shared/include/GLFW/glfw3.h ../../shared/gl3w/GL/glcorearb.h \
- ../../shared/cs488-framework/OpenGLImport.hpp \
- ../../shared/gl3w/GL/gl3w.h \
- ../../shared/cs488-framework/ShaderProgram.hpp ../maze.hpp \
  ../../shared/cs488-framework/GlErrorCheck.hpp ../../shared/imgui/imgui.h \
  ../../shared/imgui/imconfig.h \
  ../../shared/include/glm/gtc/matrix_transform.hpp \
@@ -87,8 +88,20 @@ Debug/A1.o: ../A1.cpp ../A1.hpp ../../shared/include/glm/glm.hpp \
  ../../shared/include/glm/gtc/type_ptr.hpp \
  ../../shared/include/glm/gtc/../gtc/quaternion.hpp \
  ../../shared/include/glm/gtc/../gtc/quaternion.inl \
- ../../shared/include/glm/gtc/type_ptr.inl
-../A1.hpp:
+ ../../shared/include/glm/gtc/type_ptr.inl \
+ ../../shared/include/glm/gtx/io.hpp \
+ ../../shared/include/glm/gtx/../gtx/quaternion.hpp \
+ ../../shared/include/glm/gtx/../gtx/../gtx/norm.hpp \
+ ../../shared/include/glm/gtx/../gtx/../gtx/norm.inl \
+ ../../shared/include/glm/gtx/../gtx/quaternion.inl \
+ ../../shared/include/glm/gtx/io.inl
+../A2.hpp:
+../../shared/cs488-framework/CS488Window.hpp:
+../../shared/include/GLFW/glfw3.h:
+../../shared/gl3w/GL/glcorearb.h:
+../../shared/cs488-framework/OpenGLImport.hpp:
+../../shared/gl3w/GL/gl3w.h:
+../../shared/cs488-framework/ShaderProgram.hpp:
 ../../shared/include/glm/glm.hpp:
 ../../shared/include/glm/detail/_fixes.hpp:
 ../../shared/include/glm/fwd.hpp:
@@ -164,13 +177,6 @@ Debug/A1.o: ../A1.cpp ../A1.hpp ../../shared/include/glm/glm.hpp \
 ../../shared/include/glm/integer.hpp:
 ../../shared/include/glm/detail/func_integer.hpp:
 ../../shared/include/glm/detail/func_integer.inl:
-../../shared/cs488-framework/CS488Window.hpp:
-../../shared/include/GLFW/glfw3.h:
-../../shared/gl3w/GL/glcorearb.h:
-../../shared/cs488-framework/OpenGLImport.hpp:
-../../shared/gl3w/GL/gl3w.h:
-../../shared/cs488-framework/ShaderProgram.hpp:
-../maze.hpp:
 ../../shared/cs488-framework/GlErrorCheck.hpp:
 ../../shared/imgui/imgui.h:
 ../../shared/imgui/imconfig.h:
@@ -182,3 +188,9 @@ Debug/A1.o: ../A1.cpp ../A1.hpp ../../shared/include/glm/glm.hpp \
 ../../shared/include/glm/gtc/../gtc/quaternion.hpp:
 ../../shared/include/glm/gtc/../gtc/quaternion.inl:
 ../../shared/include/glm/gtc/type_ptr.inl:
+../../shared/include/glm/gtx/io.hpp:
+../../shared/include/glm/gtx/../gtx/quaternion.hpp:
+../../shared/include/glm/gtx/../gtx/../gtx/norm.hpp:
+../../shared/include/glm/gtx/../gtx/../gtx/norm.inl:
+../../shared/include/glm/gtx/../gtx/quaternion.inl:
+../../shared/include/glm/gtx/io.inl:
