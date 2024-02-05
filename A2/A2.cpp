@@ -33,6 +33,14 @@ A2::A2()
 	m_rotation_model = mat4(1.0f);
 	m_translate_model = mat4(1.0f);
 	m_scale_model = mat4(1.0f);
+	m_rotation_view = mat4(1.0f);
+	m_translate_view = mat4(1.0f);
+	m_near = 1.0f;
+	m_far = 10.0f;
+	m_aspect = 1.0f;
+	m_fov = glm::radians(30.0f);
+	// m_viewport = make_pair(vec2())
+
 	m_prev_mouse_x = 0.0f;
 	m_prev_mouse_y = 0.0f;
 }
@@ -42,6 +50,22 @@ A2::A2()
 A2::~A2()
 {
 
+}
+
+void A2::reset(){
+	interaction_mode = ROTATE_VIEW;
+	m_rotation_model = mat4(1.0f);
+	m_translate_model = mat4(1.0f);
+	m_scale_model = mat4(1.0f);
+	m_rotation_view = mat4(1.0f);
+	m_translate_view = mat4(1.0f);
+	m_near = 1.0f;
+	m_far = 10.0f;
+	m_aspect = 1.0f;
+	m_fov = glm::radians(30.0f);
+
+	m_prev_mouse_x = 0.0f;
+	m_prev_mouse_y = 0.0f;
 }
 
 //----------------------------------------------------------------------------------------
@@ -185,8 +209,8 @@ void A2::drawLine(
 	m_vertexData.numVertices += 2;
 }
 
-std::vector<line3d> A2::getcubeLines(){
-	const float l = 0.5f;
+vector<line3d> A2::getcubeLines(){
+	const float l = 1.0f;
 
 	vec4 p1 = vec4(-l, -l, -l, 1.0f);
 	vec4 p2 = vec4(-l, -l,  l, 1.0f);
@@ -198,22 +222,37 @@ std::vector<line3d> A2::getcubeLines(){
 	vec4 p8 = vec4( l,  l, -l, 1.0f);
 	
 	vector<line3d> cubelines;
-	cubelines.push_back(line3d(p1, p2, m_currentLineColour));
-	cubelines.push_back(line3d(p2, p3, m_currentLineColour));
-	cubelines.push_back(line3d(p3, p4, m_currentLineColour));
-	cubelines.push_back(line3d(p4, p1, m_currentLineColour));
-
-	cubelines.push_back(line3d(p5, p6, m_currentLineColour));
-	cubelines.push_back(line3d(p6, p7, m_currentLineColour));
-	cubelines.push_back(line3d(p7, p8, m_currentLineColour));
-	cubelines.push_back(line3d(p8, p5, m_currentLineColour));
-
-	cubelines.push_back(line3d(p1, p5, m_currentLineColour));
-	cubelines.push_back(line3d(p2, p6, m_currentLineColour));
-	cubelines.push_back(line3d(p3, p7, m_currentLineColour));
-	cubelines.push_back(line3d(p4, p8, m_currentLineColour));
+	// Face 1
+	cubelines.push_back(line3d(p1, p2, WHITE));
+	cubelines.push_back(line3d(p2, p3, WHITE));
+	cubelines.push_back(line3d(p3, p4, WHITE));
+	cubelines.push_back(line3d(p4, p1, WHITE));
+	// Face 2
+	cubelines.push_back(line3d(p5, p6, WHITE));
+	cubelines.push_back(line3d(p6, p7, WHITE));
+	cubelines.push_back(line3d(p7, p8, WHITE));
+	cubelines.push_back(line3d(p8, p5, WHITE));
+	// Link them
+	cubelines.push_back(line3d(p1, p5, WHITE));
+	cubelines.push_back(line3d(p2, p6, WHITE));
+	cubelines.push_back(line3d(p3, p7, WHITE));
+	cubelines.push_back(line3d(p4, p8, WHITE));
 
 	return cubelines;
+}
+
+vector<line3d> A2::getgnomonlines(const vec3& c1, const vec3& c2, const vec3& c3){
+	const float l = 0.5f;
+	vector<line3d> lines;
+	vec4 p1 = vec4(0.0f, 0.0f, 0.0f, 1.0f);
+	vec4 p2 = vec4(   l, 0.0f, 0.0f, 1.0f);
+	vec4 p3 = vec4(0.0f,    l, 0.0f, 1.0f);
+	vec4 p4 = vec4(0.0f, 0.0f,    l, 1.0f);
+	lines.push_back(line3d(p1, p2, c1));
+	lines.push_back(line3d(p1, p3, c2));
+	lines.push_back(line3d(p1, p4, c3));
+
+	return lines;
 }
 
 void A2::draw3dlines(vector<line3d> lines){
@@ -259,12 +298,33 @@ void A2::appLogic()
 	// drawLine(vec2(0.25f, -0.25f), vec2(0.25f, 0.25f));
 	// drawLine(vec2(0.25f, 0.25f), vec2(-0.25f, 0.25f));
 	// drawLine(vec2(-0.25f, 0.25f), vec2(-0.25f, -0.25f));
+	// vector<vec3> cube_gnomon_colors{RED, GREEN, BLUE};
+	vector<line3d> all_lines;
 	vector<line3d> cubelines = getcubeLines();
-	cubelines = transformLines(cubelines, m_rotation_model);
-	cubelines = transformLines(cubelines, m_scale_model);
-	cubelines = transformLines(cubelines, m_translate_model);
-	draw3dlines(cubelines);
-	// cout << m_mouse_clicked[0] << m_mouse_clicked[1] << m_mouse_clicked[2] << endl;
+	vector<line3d> cube_gnomonlines = getgnomonlines(RED, GREEN, BLUE);
+	all_lines.insert(all_lines.end(), cubelines.begin(), cubelines.end());
+	all_lines.insert(all_lines.end(), cube_gnomonlines.begin(), cube_gnomonlines.end());
+	all_lines = transformLines(all_lines, m_rotation_model);
+	all_lines = transformLines(all_lines, m_scale_model);
+	all_lines = transformLines(all_lines, m_translate_model);
+
+	vector<line3d> world_gnomonlines = getgnomonlines(YELLOW, PINK, TIFFANY);
+	all_lines.insert(all_lines.end(), world_gnomonlines.begin(), world_gnomonlines.end());
+	mat4 Projection = get_projection_matrix();
+	// cubelines.insert(cubelines.begin(), gnomonlines.begin(), gnomonlines.end());
+	// cubelines = transformLines(cubelines, m_rotation_model);
+	// cubelines = transformLines(cubelines, m_scale_model);
+	// cubelines = transformLines(cubelines, m_translate_model);
+	// cubelines = transformLines(cubelines, Projection);
+	// cube_gnomonlines = transformLines(cube_gnomonlines, m_rotation_model);
+	// cube_gnomonlines = transformLines(cube_gnomonlines, m_translate_model);
+	// cube_gnomonlines = transformLines(cube_gnomonlines, Projection);
+	all_lines = transformLines(all_lines, m_rotation_view);
+	all_lines = transformLines(all_lines, m_translate_view);
+	all_lines = transformLines(all_lines, Projection);
+	clip_nearandfar(all_lines);
+
+	draw3dlines(all_lines);
 }
 
 //----------------------------------------------------------------------------------------
@@ -288,17 +348,26 @@ void A2::guiLogic()
 
 
 	// Add more gui elements here here ...
-	ImGui::RadioButton("Rotation Model ", (int*)&interaction_mode, ROTATE_MODEL);
-	ImGui::RadioButton("Translate Model ", (int*)&interaction_mode, TRANSLATE_MODEL);
-	ImGui::RadioButton("Scale Model ", (int*)&interaction_mode, SCALE_MODEL);
-	// ImGui::RadioButton("Rotation Model", &intersection_mode, ROTATE_MODEL);
+	ImGui::RadioButton("Rotation View   (o)", (int*)&interaction_mode, ROTATE_VIEW);
+	ImGui::RadioButton("Translate View  (e)", (int*)&interaction_mode, TRANSLATE_VIEW);
+	ImGui::RadioButton("Perspective     (p)", (int*)&interaction_mode, PERSPECTIVE);
+	ImGui::RadioButton("Rotation Model  (r)", (int*)&interaction_mode, ROTATE_MODEL);
+	ImGui::RadioButton("Translate Model (t)", (int*)&interaction_mode, TRANSLATE_MODEL);
+	ImGui::RadioButton("Scale Model     (s)", (int*)&interaction_mode, SCALE_MODEL);
+	ImGui::RadioButton("Viewport        (v)", (int*)&interaction_mode, VIEWPORT);
 
 	// Create Button, and check if it was clicked:
-	if( ImGui::Button( "Quit Application" ) ) {
+	if( ImGui::Button( "Quit Application(q)" ) ) {
 		glfwSetWindowShouldClose(m_window, GL_TRUE);
+	}
+	if( ImGui::Button( "Reset(a)" ) ) {
+		reset();
 	}
 
 	ImGui::Text( "Framerate: %.1f FPS", ImGui::GetIO().Framerate );
+	ImGui::Text( "Near: %.1f, Far: %.1f", m_near, m_far );
+	// For Debug:
+	ImGui::Text( "FOV: %.1f", m_fov );
 
 	ImGui::End();
 }
@@ -382,46 +451,104 @@ bool A2::mouseMoveEvent (
 
 	// Fill in with event handling code...
 	float theta = (xPos-m_prev_mouse_x)/300.0f;
-	theta += (yPos-m_prev_mouse_y)/300.0f;
+	// theta += (yPos-m_prev_mouse_y)/300.0f;
 	if(m_mouse_clicked[0]){ // Left -> x axis
 		if(interaction_mode == ROTATE_MODEL){
-			update_rotation_model(theta, 0);
+			mat4 T = get_rotation_matrix(theta, 0);
+			m_rotation_model = T * m_rotation_model;
 			eventHandled = true;
 		}
 		else if(interaction_mode == TRANSLATE_MODEL){
-			update_translate_model(theta, 0.0f, 0.0f);
+			mat4 T = get_translate_matrix(theta, 0.0f, 0.0f);
+			m_translate_model = T * m_translate_model;
 			eventHandled = true;
 		}
 		else if(interaction_mode == SCALE_MODEL){
-			update_scale_model(1.0f+theta, 1.0f, 1.0f);
+			mat4 T = get_scale_matrix(1.0f+theta, 1.0f, 1.0f);
+			m_scale_model = T * m_scale_model;
+			eventHandled = true;
+		}
+		else if(interaction_mode == ROTATE_VIEW){
+			mat4 T = get_rotation_matrix(theta, 0);
+			m_rotation_view = T * m_rotation_view;
+			eventHandled = true;
+		}
+		else if(interaction_mode == TRANSLATE_VIEW){
+			mat4 T = get_translate_matrix(theta, 0.0f, 0.0f);
+			m_translate_view = T * m_translate_view;
+			eventHandled = true;
+		}
+		else if(interaction_mode == PERSPECTIVE){
+			if(m_fov+theta >= radians(5.0f) && m_fov+theta <= radians(160.0f)){
+				m_fov += theta;
+				// cout << radians(5.0f) << " " << radians(160.0f) << endl;
+			}
 			eventHandled = true;
 		}
 	}
 	if(m_mouse_clicked[1]){ // Middle -> y axis
 		if(interaction_mode == ROTATE_MODEL){
-			update_rotation_model(theta, 1);
+			mat4 T = get_rotation_matrix(theta, 1);
+			m_rotation_model = T * m_rotation_model;
 			eventHandled = true;
 		}
 		else if(interaction_mode == TRANSLATE_MODEL){
-			update_translate_model(0.0f, theta, 0.0f);
+			mat4 T = get_translate_matrix(0.0f, theta, 0.0f);
+			m_translate_model = T * m_translate_model;
 			eventHandled = true;
 		}
 		else if(interaction_mode == SCALE_MODEL){
-			update_scale_model(1.0f, 1.0f+theta, 1.0f);
+			mat4 T = get_scale_matrix(1.0f, 1.0f+theta, 1.0f);
+			m_scale_model = T * m_scale_model;
+			eventHandled = true;
+		}
+		else if(interaction_mode == ROTATE_VIEW){
+			mat4 T = get_rotation_matrix(theta, 1);
+			m_rotation_view = T * m_rotation_view;
+			eventHandled = true;
+		}
+		else if(interaction_mode == TRANSLATE_VIEW){
+			mat4 T = get_translate_matrix(0.0f, theta, 0.0f);
+			m_translate_view = T * m_translate_view;
+			eventHandled = true;
+		}
+		else if(interaction_mode == PERSPECTIVE){
+			if(m_near+theta >= 0.1f){
+				m_near += theta;
+			}
 			eventHandled = true;
 		}
 	}
 	if(m_mouse_clicked[2]){ // Right -> z axis
 		if(interaction_mode == ROTATE_MODEL){
-			update_rotation_model(theta, 2);
+			mat4 T = get_rotation_matrix(theta, 2);
+			m_rotation_model = T * m_rotation_model;
 			eventHandled = true;
 		}
 		else if(interaction_mode == TRANSLATE_MODEL){
-			update_translate_model(0.0f, 0.0f, theta);
+			mat4 T = get_translate_matrix(0.0f, 0.0f, theta);
+			m_translate_model = T * m_translate_model;
 			eventHandled = true;
 		}
 		else if(interaction_mode == SCALE_MODEL){
-			update_scale_model(1.0f, 1.0f, 1.0f+theta);
+			mat4 T = get_scale_matrix(1.0f, 1.0f, 1.0f+theta);
+			m_scale_model = T * m_scale_model;
+			eventHandled = true;
+		}
+		else if(interaction_mode == ROTATE_VIEW){
+			mat4 T = get_rotation_matrix(theta, 2);
+			m_rotation_view = T * m_rotation_view;
+			eventHandled = true;
+		}
+		else if(interaction_mode == TRANSLATE_VIEW){
+			mat4 T = get_translate_matrix(0.0f, 0.0f, theta);
+			m_translate_view = T * m_translate_view;
+			eventHandled = true;
+		}
+		else if(interaction_mode == PERSPECTIVE){
+			if(m_far+theta <= 30.0f){
+				m_far += theta;
+			}
 			eventHandled = true;
 		}
 	}
@@ -560,41 +687,91 @@ bool A2::keyInputEvent (
 	return eventHandled;
 }
 
-void A2::update_rotation_model(float theta, int coor){
+mat4 A2::get_rotation_matrix(float theta, int coor){
 	mat4 T = mat4(1.0f);
 	if(coor == 0){ // Rx
-		T = mat4(1.0f, 0.0f, 0.0f, 0.0f,
+		T = mat4(1.0f,       0.0f,        0.0f, 0.0f,
 				 0.0f, cos(theta), -sin(theta), 0.0f,
-				 0.0f, sin(theta), cos(theta), 0.0f,
-				 0.0f, 0.0f, 0.0f, 1.0f);
+				 0.0f, sin(theta),  cos(theta), 0.0f,
+				 0.0f,       0.0f,        0.0f, 1.0f);
 	}
 	else if(coor == 1){ // Ry
-		T = mat4(cos(theta), 0.0f, sin(theta), 0.0f,
-				 0.0f, 1.0f, 0.0f, 0.0f,
+		T = mat4( cos(theta), 0.0f, sin(theta), 0.0f,
+				        0.0f, 1.0f,       0.0f, 0.0f,
 				 -sin(theta), 0.0f, cos(theta), 0.0f,
-				 0.0f, 0.0f, 0.0f, 1.0f);
+				        0.0f, 0.0f,       0.0f, 1.0f);
 	}
 	else if(coor == 2){ // Rz
 		T = mat4(cos(theta), -sin(theta), 0.0f, 0.0f,
-				 sin(theta), cos(theta), 0.0f, 0.0f,
-				 0.0f, 0.0f, 1.0f, 0.0f,
-				 0.0f, 0.0f, 0.0f, 1.0f);
+				 sin(theta),  cos(theta), 0.0f, 0.0f,
+				       0.0f,        0.0f, 1.0f, 0.0f,
+				       0.0f,        0.0f, 0.0f, 1.0f);
 	}
-	m_rotation_model = transpose(T)*m_rotation_model;
+	// m_rotation_model = transpose(T)*m_rotation_model;
+	return transpose(T);
 }
 
-void A2::update_translate_model(float dx, float dy, float dz){
+mat4 A2::get_translate_matrix(float dx, float dy, float dz){
 	mat4 T = mat4(1.0f, 0.0f, 0.0f, dx,
 				  0.0f, 1.0f, 0.0f, dy,
 				  0.0f, 0.0f, 1.0f, dz,
 				  0.0f, 0.0f, 0.0f, 1.0f);
-	m_translate_model = transpose(T)*m_translate_model;
+	// m_translate_model = transpose(T)*m_translate_model;
+	return transpose(T);
 }
 
-void A2::update_scale_model(float sx, float sy, float sz){
+mat4 A2::get_scale_matrix(float sx, float sy, float sz){
 	mat4 T = mat4(sx  , 0.0f, 0.0f, 0.0f,
 				  0.0f, sy  , 0.0f, 0.0f,
 				  0.0f, 0.0f, sz  , 0.0f,
 				  0.0f, 0.0f, 0.0f, 1.0f);
-	m_scale_model = transpose(T)*m_scale_model;
+	// m_scale_model = transpose(T)*m_scale_model;
+	return transpose(T);
+}
+
+mat4 A2::get_projection_matrix(){
+	mat4 T = mat4((cos(m_fov/2.0f)/sin(m_fov/2.0f))/m_aspect, 0.0f, 0.0f, 0.0f,
+				  0.0f,(cos(m_fov/2.0f)/sin(m_fov/2.0f)), 0.0f, 0.0f,
+				  0.0f, 0.0f, (m_far+m_near)/(m_far-m_near), (-2.0f*m_far*m_near)/(m_far-m_near),
+				  0.0f, 0.0f, 1.0f, 0.0f);
+	return transpose(T);
+}
+
+void A2::clip_nearandfar(vector<line3d>& lines){
+	vector<line3d> after_clipped;
+	for(line3d line: lines){
+		if(line.start.z < m_near && line.end.z < m_near){
+			continue; // trivially reject
+		}
+		else if(line.start.z >= m_near && line.end.z >= m_near){
+			after_clipped.push_back(line); // trivally accept
+		}
+		else if(line.end.z < m_near){
+			float t = (m_near - line.start.z)/(line.end.z - line.start.z);
+			after_clipped.push_back(line3d(line.start, (1.0f-t)*line.start + t*line.end, line.colour));
+		}
+		else{
+			float t = (m_near - line.start.z)/(line.end.z - line.start.z);
+			after_clipped.push_back(line3d((1.0f-t)*line.start + t*line.end, line.end, line.colour));
+		}
+	}
+	lines = after_clipped;
+	after_clipped.clear();
+	for(line3d line: lines){
+		if(line.start.z > m_far && line.end.z > m_far){
+			continue; // trivially reject
+		}
+		else if(line.start.z <= m_far && line.end.z <= m_far){
+			after_clipped.push_back(line); // trivally accept
+		}
+		else if(line.start.z <= m_far){
+			float t = (m_far - line.start.z)/(line.end.z - line.start.z);
+			after_clipped.push_back(line3d(line.start, (1.0f-t)*line.start + t*line.end, line.colour));
+		}
+		else{
+			float t = (m_far - line.start.z)/(line.end.z - line.start.z);
+			after_clipped.push_back(line3d((1.0f-t)*line.start + t*line.end, line.end, line.colour));
+		}
+	}
+	lines = after_clipped;
 }

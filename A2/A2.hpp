@@ -15,6 +15,14 @@ using namespace glm;
 // Set a global maximum number of vertices in order to pre-allocate VBO data
 // in one shot, rather than reallocating each frame.
 const GLsizei kMaxVertices = 1000;
+const vec3 RED = vec3(1.0f, 0.0f, 0.0f);
+const vec3 GREEN = vec3(0.0f, 1.0f, 0.0f);
+const vec3 BLUE = vec3(0.0f, 0.0f, 1.0f);
+const vec3 WHITE = vec3(1.0f, 1.0f, 1.0f);
+const vec3 BLACK = vec3(0.0f, 0.0f, 0.0f);
+const vec3 YELLOW = vec3(1.0f, 1.0f, 0.0f);
+const vec3 PINK = vec3(1.0f, 0.0f, 1.0f);
+const vec3 TIFFANY = vec3(0.0f, 1.0f, 1.0f);
 
 class line3d{
 	public:
@@ -84,10 +92,12 @@ protected:
 			const glm::vec2 & v0,
 			const glm::vec2 & v1
 	);
+	void reset();
 	void draw3dlines(std::vector<line3d> lines);
-	void update_rotation_model(float theta, int coor);
-	void update_translate_model(float dx, float dy, float dz);
-	void update_scale_model(float sx, float sy, float sz);
+	glm::mat4 get_rotation_matrix(float theta, int coor);
+	glm::mat4 get_translate_matrix(float dx, float dy, float dz);
+	glm::mat4 get_scale_matrix(float sx, float sy, float sz);
+	glm::mat4 get_projection_matrix();
 
 	ShaderProgram m_shader;
 
@@ -104,9 +114,20 @@ protected:
 	glm::mat4 m_rotation_model;
 	glm::mat4 m_translate_model;
 	glm::mat4 m_scale_model;
+	glm::mat4 m_rotation_view;
+	glm::mat4 m_translate_view;
+
+	float m_fov;
+	float m_aspect;
+	float m_near;
+	float m_far;
+	std::pair<vec2, vec2> m_viewport;
 
 	// my own code:
 	IntersectionMode interaction_mode;
 	std::vector<line3d> getcubeLines();
+	std::vector<line3d> getgnomonlines(const vec3& c1, const vec3& c2, const vec3& c3);
 	std::vector<line3d> transformLines(std::vector<line3d> lines, glm::mat4 T);
+
+	void clip_nearandfar(std::vector<line3d>& lines);
 };
