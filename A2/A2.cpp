@@ -29,17 +29,19 @@ VertexData::VertexData()
 A2::A2()
 	: m_currentLineColour(vec3(0.0f))
 {
-	interaction_mode = ROTATE_VIEW;
+	interaction_mode = ROTATE_MODEL;
 	m_rotation_model = mat4(1.0f);
 	m_translate_model = mat4(1.0f);
 	m_scale_model = mat4(1.0f);
 	m_rotation_view = mat4(1.0f);
 	m_translate_view = mat4(1.0f);
 	m_near = 1.0f;
-	m_far = 10.0f;
+	m_far = 20.0f;
 	m_aspect = 1.0f;
 	m_fov = glm::radians(30.0f);
-	// m_viewport = make_pair(vec2())
+	m_viewport = make_pair(vec2(-0.9f, 0.9f), vec2(0.9f, -0.9f));
+	m_initial_camera_pos = vec3(0.0f, 0.0f, 0.0f);
+	m_viewport_mouse_clicked = false;
 
 	m_prev_mouse_x = 0.0f;
 	m_prev_mouse_y = 0.0f;
@@ -53,16 +55,19 @@ A2::~A2()
 }
 
 void A2::reset(){
-	interaction_mode = ROTATE_VIEW;
+	interaction_mode = ROTATE_MODEL;
 	m_rotation_model = mat4(1.0f);
 	m_translate_model = mat4(1.0f);
 	m_scale_model = mat4(1.0f);
 	m_rotation_view = mat4(1.0f);
 	m_translate_view = mat4(1.0f);
 	m_near = 1.0f;
-	m_far = 10.0f;
+	m_far = 20.0f;
 	m_aspect = 1.0f;
 	m_fov = glm::radians(30.0f);
+	m_viewport = make_pair(vec2(-0.9f, 0.9f), vec2(0.9f, -0.9f));
+	m_initial_camera_pos = vec3(0.0f, 0.0f, 0.0f);
+	m_viewport_mouse_clicked = false;
 
 	m_prev_mouse_x = 0.0f;
 	m_prev_mouse_y = 0.0f;
@@ -307,8 +312,11 @@ void A2::appLogic()
 	all_lines = transformLines(all_lines, m_rotation_model);
 	all_lines = transformLines(all_lines, m_scale_model);
 	all_lines = transformLines(all_lines, m_translate_model);
+	// cout << "Model Translation: " << m_translate_model << endl;
+	// cout << "View Translation" << m_translate_view << endl;
 
 	vector<line3d> world_gnomonlines = getgnomonlines(YELLOW, PINK, TIFFANY);
+	transformLines(world_gnomonlines, get_translate_matrix(m_initial_camera_pos.x, m_initial_camera_pos.y, m_initial_camera_pos.z));
 	all_lines.insert(all_lines.end(), world_gnomonlines.begin(), world_gnomonlines.end());
 	mat4 Projection = get_projection_matrix();
 	// cubelines.insert(cubelines.begin(), gnomonlines.begin(), gnomonlines.end());
@@ -323,8 +331,10 @@ void A2::appLogic()
 	all_lines = transformLines(all_lines, m_translate_view);
 	all_lines = transformLines(all_lines, Projection);
 	clip_nearandfar(all_lines);
+	clip_viewport(all_lines);
 
 	draw3dlines(all_lines);
+	drawViewport();
 }
 
 //----------------------------------------------------------------------------------------
@@ -552,8 +562,15 @@ bool A2::mouseMoveEvent (
 			eventHandled = true;
 		}
 	}
+	if(interaction_mode == VIEWPORT && m_viewport_mouse_clicked){
+		float new_y = m_window_size.second - yPos;
+		m_viewport.second = vec2((xPos-m_window_size.first/2.0f)/(m_window_size.first/2.0f), (new_y-m_window_size.second/2.0f)/(m_window_size.second/2.0f));
+		// viewport_judge();
+		eventHandled = true;
+	}
 	m_prev_mouse_x = xPos;
 	m_prev_mouse_y = yPos;
+	// cout << xPos << " " << yPos << endl;
 	return eventHandled;
 }
 
@@ -572,6 +589,17 @@ bool A2::mouseButtonInputEvent (
 	if(button == GLFW_MOUSE_BUTTON_LEFT){
 		if(actions == GLFW_PRESS){
 			m_mouse_clicked[0] = true;
+			if(interaction_mode == VIEWPORT){
+				float new_y = m_window_size.second - m_prev_mouse_y;
+				if(!m_viewport_mouse_clicked){
+					m_viewport.first = vec2((m_prev_mouse_x-m_window_size.first/2.0f)/(m_window_size.first/2.0f), (new_y-m_window_size.second/2.0f)/(m_window_size.second/2.0f));
+				}
+				else{
+					m_viewport.second = vec2((m_prev_mouse_x-m_window_size.first/2.0f)/(m_window_size.first/2.0f), (new_y-m_window_size.second/2.0f)/(m_window_size.second/2.0f));
+					viewport_judge();
+				}
+				m_viewport_mouse_clicked = !m_viewport_mouse_clicked;
+			}
 			eventHandled = true;
 		}
 		else if(actions == GLFW_RELEASE){
@@ -628,6 +656,7 @@ bool A2::windowResizeEvent (
 	bool eventHandled(false);
 
 	// Fill in with event handling code...
+	m_window_size = make_pair((float)width, (float)height);
 
 	return eventHandled;
 }
@@ -739,6 +768,7 @@ mat4 A2::get_projection_matrix(){
 
 void A2::clip_nearandfar(vector<line3d>& lines){
 	vector<line3d> after_clipped;
+	// clip near plane
 	for(line3d line: lines){
 		if(line.start.z < m_near && line.end.z < m_near){
 			continue; // trivially reject
@@ -757,6 +787,7 @@ void A2::clip_nearandfar(vector<line3d>& lines){
 	}
 	lines = after_clipped;
 	after_clipped.clear();
+	// clip far plane
 	for(line3d line: lines){
 		if(line.start.z > m_far && line.end.z > m_far){
 			continue; // trivially reject
@@ -774,4 +805,125 @@ void A2::clip_nearandfar(vector<line3d>& lines){
 		}
 	}
 	lines = after_clipped;
+}
+
+void A2::drawViewport(){
+	// float w = m_viewport.second.x - m_viewport.first.x;
+	// float h = m_viewport.first.y - m_viewport.second.y;
+	vec2 tl = m_viewport.first;
+	vec2 br = m_viewport.second;
+	vec2 tr = vec2(br.x, tl.y);
+	vec2 bl = vec2(tl.x, br.y);
+
+	setLineColour(ORANGE);
+	drawLine(tl, tr);
+	drawLine(tr, br);
+	drawLine(br, bl);
+	drawLine(bl, tl);
+}
+
+void A2::clip_viewport(vector<line3d>& lines){
+	vec2 tl = m_viewport.first;
+	vec2 br = m_viewport.second;
+	vec2 tr = vec2(br.x, tl.y);
+	vec2 bl = vec2(tl.x, br.y);
+
+	vector<line3d> after_clipped;
+	// clip left line
+	for(line3d line: lines){
+		if(line.start.x < tl.x && line.end.x < tl.x){
+			continue; // trivially reject
+		}
+		else if(line.start.x >= tl.x && line.end.x >= tl.x){
+			after_clipped.push_back(line); // trivially accept
+		}
+		else{
+			float t = (tl.x - line.start.x)/(line.end.x - line.start.x);
+			if(line.start.x < tl.x){
+				after_clipped.push_back(line3d((1.0f-t)*line.start+t*line.end, line.end, line.colour));
+			}
+			else{
+				after_clipped.push_back(line3d(line.start, (1.0f-t)*line.start+t*line.end, line.colour));
+			}
+		}
+	}
+	lines = after_clipped; 
+	after_clipped.clear();
+	// clip right line
+	for(line3d line: lines){
+		if(line.start.x > br.x && line.end.x > br.x){
+			continue; // trivially reject
+		}
+		else if(line.start.x <= br.x && line.end.x <= br.x){
+			after_clipped.push_back(line); // trivially accept
+		}
+		else{
+			float t = (br.x - line.start.x)/(line.end.x - line.start.x);
+			if(line.start.x > br.x){
+				after_clipped.push_back(line3d((1.0f-t)*line.start+t*line.end, line.end, line.colour));
+			}
+			else{
+				after_clipped.push_back(line3d(line.start, (1.0f-t)*line.start+t*line.end, line.colour));
+			}
+		}
+	}
+	lines = after_clipped; 
+	after_clipped.clear();
+	// clip top line
+	for(line3d line: lines){
+		if(line.start.y > tl.y && line.end.y > tl.y){
+			continue; // trivially reject
+		}
+		else if(line.start.y <= tl.y && line.end.y <= tl.y){
+			after_clipped.push_back(line); // trivially accept
+		}
+		else{
+			float t = (tl.y - line.start.y)/(line.end.y - line.start.y);
+			if(line.start.y > tl.y){
+				after_clipped.push_back(line3d((1.0f-t)*line.start+t*line.end, line.end, line.colour));
+			}
+			else{
+				after_clipped.push_back(line3d(line.start, (1.0f-t)*line.start+t*line.end, line.colour));
+			}
+		}
+	}
+	lines = after_clipped; 
+	after_clipped.clear();
+	// clip bottom line
+	for(line3d line: lines){
+		if(line.start.y < br.y && line.end.y < br.y){
+			continue; // trivially reject
+		}
+		else if(line.start.y >= br.y && line.end.y >= br.y){
+			after_clipped.push_back(line); // trivially accept
+		}
+		else{
+			float t = (br.y - line.start.y)/(line.end.y - line.start.y);
+			if(line.start.y < br.y){
+				after_clipped.push_back(line3d((1.0f-t)*line.start+t*line.end, line.end, line.colour));
+			}
+			else{
+				after_clipped.push_back(line3d(line.start, (1.0f-t)*line.start+t*line.end, line.colour));
+			}
+		}
+	}
+	lines = after_clipped; 
+}
+
+void A2::viewport_judge(){
+	if(m_viewport.first.x < m_viewport.second.x && m_viewport.first.y > m_viewport.second.y){
+		return;
+	}
+	else{
+		if(m_viewport.first.x > m_viewport.second.x){
+			float temp = m_viewport.first.x;
+			m_viewport.first.x = m_viewport.second.x;
+			m_viewport.second.x = temp;
+		}
+		if(m_viewport.first.y < m_viewport.second.y){
+			float temp = m_viewport.first.y;
+			m_viewport.first.y = m_viewport.second.y;
+			m_viewport.second.y = temp;
+		}
+	}
 }

@@ -23,6 +23,7 @@ const vec3 BLACK = vec3(0.0f, 0.0f, 0.0f);
 const vec3 YELLOW = vec3(1.0f, 1.0f, 0.0f);
 const vec3 PINK = vec3(1.0f, 0.0f, 1.0f);
 const vec3 TIFFANY = vec3(0.0f, 1.0f, 1.0f);
+const vec3 ORANGE = vec3(1.0f, 165.0f/255.0f, 0.0f);
 
 class line3d{
 	public:
@@ -94,6 +95,7 @@ protected:
 	);
 	void reset();
 	void draw3dlines(std::vector<line3d> lines);
+	void drawViewport();
 	glm::mat4 get_rotation_matrix(float theta, int coor);
 	glm::mat4 get_translate_matrix(float dx, float dy, float dz);
 	glm::mat4 get_scale_matrix(float sx, float sy, float sz);
@@ -111,6 +113,8 @@ protected:
 	VertexData m_vertexData;
 
 	glm::vec3 m_currentLineColour;
+
+	glm::vec3 m_initial_camera_pos;
 	glm::mat4 m_rotation_model;
 	glm::mat4 m_translate_model;
 	glm::mat4 m_scale_model;
@@ -121,13 +125,16 @@ protected:
 	float m_aspect;
 	float m_near;
 	float m_far;
-	std::pair<vec2, vec2> m_viewport;
+	std::pair<float, float> m_window_size;
+	std::pair<vec2, vec2> m_viewport; // top left and bottom right
 
-	// my own code:
 	IntersectionMode interaction_mode;
 	std::vector<line3d> getcubeLines();
 	std::vector<line3d> getgnomonlines(const vec3& c1, const vec3& c2, const vec3& c3);
 	std::vector<line3d> transformLines(std::vector<line3d> lines, glm::mat4 T);
 
 	void clip_nearandfar(std::vector<line3d>& lines);
+	void clip_viewport(std::vector<line3d>& lines);
+	void viewport_judge();
+	bool m_viewport_mouse_clicked;
 };
