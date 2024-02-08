@@ -38,9 +38,9 @@ A2::A2()
 	m_near = 1.0f;
 	m_far = 20.0f;
 	m_aspect = 1.0f;
-	m_fov = glm::radians(30.0f);
+	m_fov = glm::radians(100.0f);
 	m_viewport = make_pair(vec2(-0.9f, 0.9f), vec2(0.9f, -0.9f));
-	m_initial_camera_pos = vec3(0.0f, 0.0f, 0.0f);
+	m_initial_camera_pos = vec3(0.0f, 0.0f, 5.0f);
 	m_viewport_mouse_clicked = false;
 
 	m_prev_mouse_x = 0.0f;
@@ -64,9 +64,9 @@ void A2::reset(){
 	m_near = 1.0f;
 	m_far = 20.0f;
 	m_aspect = 1.0f;
-	m_fov = glm::radians(30.0f);
+	m_fov = glm::radians(100.0f);
 	m_viewport = make_pair(vec2(-0.9f, 0.9f), vec2(0.9f, -0.9f));
-	m_initial_camera_pos = vec3(0.0f, 0.0f, 0.0f);
+	m_initial_camera_pos = vec3(0.0f, 0.0f, 5.0f);
 	m_viewport_mouse_clicked = false;
 
 	m_prev_mouse_x = 0.0f;
@@ -316,11 +316,11 @@ void A2::appLogic()
 	// cout << "View Translation" << m_translate_view << endl;
 
 	vector<line3d> world_gnomonlines = getgnomonlines(YELLOW, PINK, TIFFANY);
-	transformLines(world_gnomonlines, get_translate_matrix(m_initial_camera_pos.x, m_initial_camera_pos.y, m_initial_camera_pos.z));
+	// transformLines(world_gnomonlines, get_translate_matrix(m_initial_camera_pos.x, m_initial_camera_pos.y, m_initial_camera_pos.z));
 	all_lines.insert(all_lines.end(), world_gnomonlines.begin(), world_gnomonlines.end());
 	mat4 Projection = get_projection_matrix();
 	// cubelines.insert(cubelines.begin(), gnomonlines.begin(), gnomonlines.end());
-	// cubelines = transformLines(cubelines, m_rotation_model);
+	// cubelines = transformLines(cubelines, m_rotation_model); 
 	// cubelines = transformLines(cubelines, m_scale_model);
 	// cubelines = transformLines(cubelines, m_translate_model);
 	// cubelines = transformLines(cubelines, Projection);
@@ -328,6 +328,7 @@ void A2::appLogic()
 	// cube_gnomonlines = transformLines(cube_gnomonlines, m_translate_model);
 	// cube_gnomonlines = transformLines(cube_gnomonlines, Projection);
 	all_lines = transformLines(all_lines, m_rotation_view);
+	all_lines = transformLines(all_lines, get_translate_matrix(m_initial_camera_pos.x, m_initial_camera_pos.y, m_initial_camera_pos.z));
 	all_lines = transformLines(all_lines, m_translate_view);
 	all_lines = transformLines(all_lines, Projection);
 	clip_nearandfar(all_lines);
@@ -377,7 +378,7 @@ void A2::guiLogic()
 	ImGui::Text( "Framerate: %.1f FPS", ImGui::GetIO().Framerate );
 	ImGui::Text( "Near: %.1f, Far: %.1f", m_near, m_far );
 	// For Debug:
-	ImGui::Text( "FOV: %.1f", m_fov );
+	// ImGui::Text( "FOV: %.1f", m_fov );
 
 	ImGui::End();
 }
@@ -759,8 +760,8 @@ mat4 A2::get_scale_matrix(float sx, float sy, float sz){
 }
 
 mat4 A2::get_projection_matrix(){
-	mat4 T = mat4((cos(m_fov/2.0f)/sin(m_fov/2.0f))/m_aspect, 0.0f, 0.0f, 0.0f,
-				  0.0f,(cos(m_fov/2.0f)/sin(m_fov/2.0f)), 0.0f, 0.0f,
+	mat4 T = mat4((1/tan(m_fov/2.0f))/m_aspect, 0.0f, 0.0f, 0.0f,
+				  0.0f,(1/tan(m_fov/2.0f)), 0.0f, 0.0f,
 				  0.0f, 0.0f, (m_far+m_near)/(m_far-m_near), (-2.0f*m_far*m_near)/(m_far-m_near),
 				  0.0f, 0.0f, 1.0f, 0.0f);
 	return transpose(T);
