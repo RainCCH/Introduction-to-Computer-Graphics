@@ -11,10 +11,17 @@
 
 #include <glm/glm.hpp>
 #include <memory>
+#include <stack>
+#include <map>
 
 struct LightSource {
 	glm::vec3 position;
 	glm::vec3 rgbIntensity;
+};
+
+enum Interaction_Mode {
+	POSITION,
+	JOINTS
 };
 
 
@@ -52,6 +59,22 @@ protected:
 	void renderSceneGraph(const SceneNode &node);
 	void renderArcCircle();
 
+	void reset();
+
+	void vCalcRotVec(float fNewX, float fNewY,
+                 float fOldX, float fOldY,
+                 float fDiameter,
+                 float *fVecX, float *fVecY, float *fVecZ);
+	void vAxisRotMatrix(float fVecX, float fVecY, float fVecZ, glm::mat4 &mNewMat);
+	void update_postion_orientation(double x, double y);
+	void update_trackball_rotation(double x, double y);
+	void renderSceneNode(const SceneNode *node, glm::mat4 model, std::stack<glm::mat4> st);
+
+	void resetPosition();
+	void resetOrientation();
+	void resetJoints();
+	void resetAll();
+
 	glm::mat4 m_perpsective;
 	glm::mat4 m_view;
 
@@ -79,4 +102,21 @@ protected:
 	std::string m_luaSceneFile;
 
 	std::shared_ptr<SceneNode> m_rootNode;
+	// My variables
+	Interaction_Mode m_interaction_mode;
+	glm::mat4 m_model_translation_matrix;
+	glm::mat4 m_model_rotation_matrix;
+	// previous mouse position
+	double m_prev_mouse_x;
+	double m_prev_mouse_y;
+
+	bool options_circle;
+	bool options_zbuffer;
+	bool options_backface_culling;
+	bool options_frontface_culling;
+	bool do_picking;
+	std::map<string, bool> joints_selected;
+
+	glm::vec3 m_trackball_rotation;
+	std::pair<float, float> m_window_size;
 };

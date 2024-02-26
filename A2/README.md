@@ -1,4 +1,4 @@
-# Compilation of A1
+# Compilation of A2
 
 `premake4 gmake`
 

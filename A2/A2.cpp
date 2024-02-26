@@ -30,7 +30,11 @@ A2::A2()
 	: m_currentLineColour(vec3(0.0f))
 {
 	interaction_mode = ROTATE_MODEL;
-	m_rotation_model = mat4(1.0f);
+	// m_rotation_model = mat4(1.0f);
+	m_rotation_model = mat4(1.0f, 0.0f, 0.0f, 0.0f,
+							0.0f, 1.0f, 0.0f, 0.0f,
+							0.0f, 0.0f, 1.0f, 0.0f,
+							0.0f, 0.0f, 0.0f, 1.0f);
 	m_translate_model = mat4(1.0f);
 	m_scale_model = mat4(1.0f);
 	m_rotation_view = mat4(1.0f);

@@ -25,7 +25,8 @@ uniform Material material;
 // Ambient light intensity for each RGB component.
 uniform vec3 ambientIntensity;
 
+uniform bool picking;
 
 void main() {
-	fragColour = vcolour;
+	fragColour = vec4(vcolour, 1.);
 }
