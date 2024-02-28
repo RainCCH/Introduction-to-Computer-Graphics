@@ -17,6 +17,7 @@ using namespace std;
 
 #include <math.h>
 #include <stack>
+#include <queue>
 
 using namespace glm;
 
@@ -92,6 +93,9 @@ void A3::init()
 
 	reset();
 
+	m_node_count = m_rootNode->totalSceneNodes();
+	selected.resize(m_node_count, false);
+
 	// Exiting the current scope calls delete automatically on meshConsolidator freeing
 	// all vertex data resources.  This is fine since we already copied this data to
 	// VBOs on the GPU.  We have no use for storing vertex data on the CPU side beyond
@@ -108,7 +112,19 @@ void A3::reset(){
 	m_model_rotation_matrix = glm::mat4(1.0f);
 	m_model_translation_matrix = glm::mat4(1.0f);
 	do_picking = false;
-	joints_selected.clear();
+	m_original_nodes_transformations.clear();
+	std::queue<SceneNode*> q;
+	q.push(m_rootNode.get());
+	while(!q.empty()){
+		SceneNode *cur = q.front();
+		q.pop();
+		cur->isSelected = false;
+		m_original_nodes_transformations[cur->m_name] = cur->get_transform();
+		for(SceneNode *child: cur->children){
+			q.push(child);
+		}
+	}
+	resetAll();
 }
 
 //----------------------------------------------------------------------------------------
@@ -327,8 +343,21 @@ void A3::resetOrientation(){
 }
 
 void A3::resetJoints(){
-	// resetAll();
-	return;
+	std::queue<SceneNode*> q;
+	q.push(m_rootNode.get());
+	while(!q.empty()){
+		SceneNode *cur = q.front();
+		q.pop();
+		if(cur->m_nodeType == NodeType::JointNode){
+			cur->set_transform(m_original_nodes_transformations[cur->m_name]);
+		}
+		for(SceneNode *child: cur->children){
+			q.push(child);
+		}
+	}
+	joint_index = 0;
+	m_joints_transformations.clear();
+	m_joints_transformations.push_back(m_original_nodes_transformations);
 }
 
 void A3::resetAll(){
@@ -375,15 +404,18 @@ void A3::guiLogic()
 
 		// Add more gui elements here here ...
 		if( ImGui::BeginMenuBar() ){
+			if (ImGui::BeginMenu("Edit")){
+				if( ImGui::MenuItem( "Undo    (U)" )) undo_joints();
+				if( ImGui::MenuItem( "Redo    (R)" )) redo_joints();
+				ImGui::EndMenu();
+			}
 			if (ImGui::BeginMenu("Application"))
 			{
 				if (ImGui::MenuItem("Reset Position       (I)")) resetPosition();
 				if (ImGui::MenuItem("Reset Orientation    (O)")) resetOrientation();
 				if (ImGui::MenuItem("Reset Joints         (S)")) resetJoints();
 				if (ImGui::MenuItem("Reset All            (A)")) resetAll();
-				if( ImGui::MenuItem("Quit                 (Q)") ) {
-					glfwSetWindowShouldClose(m_window, GL_TRUE);
-				}
+				if( ImGui::MenuItem("Quit                 (Q)")) glfwSetWindowShouldClose(m_window, GL_TRUE);
 				ImGui::EndMenu();
 			}
 			if (ImGui::BeginMenu("Options"))
@@ -418,7 +450,8 @@ static void updateShaderUniforms(
 		const GeometryNode & node,
 		const glm::mat4 & viewMatrix,
 		const glm::mat4 & modelMatrix,
-		const bool & do_picking
+		const bool & do_picking,
+		const std::vector<bool> & selected
 ) {
 
 	shader.enable();
@@ -447,6 +480,12 @@ static void updateShaderUniforms(
 			vec3 kd = node.material.kd;
 			vec3 ks = node.material.ks;
 			float shininess = node.material.shininess;
+
+			if(selected[node.m_nodeId]){
+				kd = vec3(0.9f, 0.9f, 0.9f);
+				ks = vec3(1.0f, 1.0f, 1.0f);
+				shininess = 1.0f;
+			}
 
 			//-- Set Material values:
 			location = shader.getUniformLocation("material.kd");
@@ -551,7 +590,7 @@ void A3::renderSceneGraph(const SceneNode & root) {
 
 void A3::renderSceneNode(const SceneNode *node, mat4 model, stack<mat4> st){
 	if(node == nullptr) return;
-	
+
 	mat4 M_push = node->get_transform();
 	st.push(M_push);
 	model = model * M_push;
@@ -564,7 +603,8 @@ void A3::renderSceneNode(const SceneNode *node, mat4 model, stack<mat4> st){
 			*geometryNode, 
 			m_view,
 			model,
-			do_picking
+			do_picking,
+			selected
 		);
 
 		BatchInfo batchInfo = m_batchInfoMap[geometryNode->meshId];
@@ -646,6 +686,62 @@ void A3::update_postion_orientation(double x, double y){
 	m_model_translation_matrix = glm::translate(m_model_translation_matrix, translate);
 }
 
+void A3::update_joints(double x, double y){
+	// cout << "update joints" << endl;
+	double delta_x = (x - m_prev_mouse_x)/300.0f;
+	double delta_y = (y - m_prev_mouse_y)/300.0f;
+	if(m_interaction_mode == POSITION) return;
+	std::queue<SceneNode*> q;
+	q.push(m_rootNode.get());
+	while(!q.empty()){
+		SceneNode *cur = q.front();
+		q.pop();
+		// cout << cur->m_name << endl;
+		if(selected[cur->m_nodeId] && ImGui::IsMouseDragging(GLFW_MOUSE_BUTTON_LEFT) && cur->m_name != "head"){
+			// cout << "selected" << endl;
+			JointNode* parent = findParentJoint(cur);
+			if(parent == nullptr) continue;
+			// cout << parent->m_name << endl;
+			parent->rotate('x', radiansToDegrees(delta_y));
+			parent->rotate('y', radiansToDegrees(delta_x));
+		}
+		if(selected[cur->m_nodeId] && ImGui::IsMouseDragging(GLFW_MOUSE_BUTTON_RIGHT) && cur->m_name == "head"){
+			// cout << "selected" << endl;
+			JointNode* parent = findParentJoint(cur);
+			if(parent == nullptr) continue;
+			parent->rotate('x', radiansToDegrees(delta_y));
+			parent->rotate('y', radiansToDegrees(delta_x));
+		}
+		for(SceneNode *child: cur->children){
+			q.push(child);
+		}
+	}
+}
+
+void A3::update_joints_transformations(){
+	std::map<string, glm::mat4> joint_trans;
+	std::queue<SceneNode*> q;
+	q.push(m_rootNode.get());
+	while(!q.empty()){
+		SceneNode *cur = q.front();
+		q.pop();
+		if(cur->m_nodeType == NodeType::JointNode){
+			joint_trans[cur->m_name] = cur->get_transform();
+		}
+		for(SceneNode *child: cur->children){
+			q.push(child);
+		}
+	}
+	m_joints_transformations.push_back(joint_trans);
+}
+
+void A3::undo_joints(){
+	return;	
+}
+
+void A3::redo_joints(){
+	return;
+}
 //----------------------------------------------------------------------------------------
 /*
  * Event handler.  Handles mouse cursor movement events.
@@ -662,7 +758,8 @@ bool A3::mouseMoveEvent (
 		eventHandled = true;
 	}
 	else if(m_interaction_mode == JOINTS){
-		float fVecX, fVecY, fVecZ;
+		update_joints(xPos, yPos);
+		eventHandled = true;
 	}
 	m_prev_mouse_x = xPos;
 	m_prev_mouse_y = yPos;
@@ -682,6 +779,52 @@ bool A3::mouseButtonInputEvent (
 	bool eventHandled(false);
 
 	// Fill in with event handling code...
+	if (button == GLFW_MOUSE_BUTTON_LEFT && actions == GLFW_PRESS && m_interaction_mode == JOINTS) {
+		double xpos, ypos;
+		glfwGetCursorPos( m_window, &xpos, &ypos );
+
+		do_picking = true;
+
+		uploadCommonSceneUniforms();
+		glClearColor(1.0, 1.0, 1.0, 1.0 );
+		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+		glClearColor(0.35, 0.35, 0.35, 1.0);
+
+		draw();
+
+		// I don't know if these are really necessary anymore.
+		// glFlush();
+		// glFinish();
+
+		CHECK_GL_ERRORS;
+
+		// Ugly -- FB coordinates might be different than Window coordinates
+		// (e.g., on a retina display).  Must compensate.
+		xpos *= double(m_framebufferWidth) / double(m_windowWidth);
+		// WTF, don't know why I have to measure y relative to the bottom of
+		// the window in this case.
+		ypos = m_windowHeight - ypos;
+		ypos *= double(m_framebufferHeight) / double(m_windowHeight);
+
+		GLubyte buffer[ 4 ] = { 0, 0, 0, 0 };
+		// A bit ugly -- don't want to swap the just-drawn false colours
+		// to the screen, so read from the back buffer.
+		glReadBuffer( GL_BACK );
+		// Actually read the pixel at the mouse location.
+		glReadPixels( int(xpos), int(ypos), 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, buffer );
+		CHECK_GL_ERRORS;
+
+		// Reassemble the object ID.
+		unsigned int what = buffer[0] + (buffer[1] << 8) + (buffer[2] << 16);
+
+		if( what < m_node_count && what >= 0 ) {
+			selected[what] = !selected[what];
+		}
+
+		do_picking = false;
+
+		CHECK_GL_ERRORS;
+	}
 
 	return eventHandled;
 }
@@ -788,6 +931,31 @@ void A3::update_trackball_rotation(double x, double y){
 	mat4 mNewMat;
 	vAxisRotMatrix(fVecX, fVecY, fVecZ, mNewMat);
 	m_model_rotation_matrix = transpose(mNewMat) * m_model_rotation_matrix;
+}
+
+JointNode* A3::findParentJoint(SceneNode *node){
+	SceneNode *root = m_rootNode.get();
+	std::queue<SceneNode*> q;
+	q.push(root);
+	while(!q.empty()){
+		SceneNode *cur = q.front();
+		q.pop();
+		if(cur->m_nodeType == NodeType::JointNode){
+			JointNode *joint = static_cast<JointNode*>(cur);
+			for(SceneNode *child: joint->children){
+				if(child == node){
+					return joint;
+				}
+				q.push(child);
+			}
+		}
+		else{
+			for(SceneNode *child: cur->children){
+				q.push(child);
+			}
+		}
+	}
+	return nullptr;
 }
 
 void vCopyMatrix(mat4 mSource, mat4 mDestination) 

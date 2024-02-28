@@ -8,11 +8,13 @@
 #include "cs488-framework/MeshConsolidator.hpp"
 
 #include "SceneNode.hpp"
+#include "JointNode.hpp"
 
 #include <glm/glm.hpp>
 #include <memory>
 #include <stack>
 #include <map>
+#include <set>
 
 struct LightSource {
 	glm::vec3 position;
@@ -68,12 +70,18 @@ protected:
 	void vAxisRotMatrix(float fVecX, float fVecY, float fVecZ, glm::mat4 &mNewMat);
 	void update_postion_orientation(double x, double y);
 	void update_trackball_rotation(double x, double y);
+	void update_joints(double x, double y);
+	void update_joints_transformations();
+	void undo_joints();
+	void redo_joints();
 	void renderSceneNode(const SceneNode *node, glm::mat4 model, std::stack<glm::mat4> st);
 
 	void resetPosition();
 	void resetOrientation();
 	void resetJoints();
 	void resetAll();
+
+	JointNode* findParentJoint(SceneNode *node);
 
 	glm::mat4 m_perpsective;
 	glm::mat4 m_view;
@@ -102,6 +110,7 @@ protected:
 	std::string m_luaSceneFile;
 
 	std::shared_ptr<SceneNode> m_rootNode;
+	int m_node_count;
 	// My variables
 	Interaction_Mode m_interaction_mode;
 	glm::mat4 m_model_translation_matrix;
@@ -115,8 +124,13 @@ protected:
 	bool options_backface_culling;
 	bool options_frontface_culling;
 	bool do_picking;
-	std::map<string, bool> joints_selected;
+	std::vector<bool> selected;
+	// std::map<string, bool> joints_selected;
 
 	glm::vec3 m_trackball_rotation;
 	std::pair<float, float> m_window_size;
+	std::map<std::string, glm::mat4> m_original_nodes_transformations;
+
+	std::vector<std::map<std::string, glm::mat4>> m_joints_transformations;
+	int joint_index;
 };

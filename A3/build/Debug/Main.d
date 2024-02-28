@@ -81,7 +81,7 @@ Debug/Main.o: ../Main.cpp ../A3.hpp \
  ../../shared/include/glm/integer.hpp \
  ../../shared/include/glm/detail/func_integer.hpp \
  ../../shared/include/glm/detail/func_integer.inl ../SceneNode.hpp \
- ../Material.hpp
+ ../Material.hpp ../JointNode.hpp
 ../A3.hpp:
 ../../shared/cs488-framework/CS488Window.hpp:
 ../../shared/include/GLFW/glfw3.h:
@@ -168,3 +168,4 @@ Debug/Main.o: ../Main.cpp ../A3.hpp \
 ../../shared/include/glm/detail/func_integer.inl:
 ../SceneNode.hpp:
 ../Material.hpp:
+../JointNode.hpp:

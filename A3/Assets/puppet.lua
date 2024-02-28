@@ -1,6 +1,6 @@
 
 rootnode = gr.node('root')
-rootnode:translate(0.0, 0.1, -3.0)
+rootnode:translate(0.0, 0.15, -3.0)
 
 red = gr.material({1.0, 0.0, 0.0}, {0.1, 0.1, 0.1}, 10)
 blue = gr.material({0.0, 0.0, 1.0}, {0.1, 0.1, 0.1}, 10)
@@ -13,7 +13,7 @@ torso:scale(0.25, 0.5, 0.15)
 torso:set_material(red)
 rootnode:add_child(torso)
 
-shoulder_joint = gr.joint('shoulder_joint', {-45.0, 0.0, 45.0}, {-45.0, 0.0, 45.0})
+shoulder_joint = gr.joint('shoulder_joint', {-90, 0, 90}, {-90, 0, 90})
 shoulder_joint:translate(0.0, 0.5, 0.0)
 rootnode:add_child(shoulder_joint)
 
@@ -31,7 +31,7 @@ neck:scale(0.1, 0.15, 0.1)
 neck:set_material(white)
 neck_joint:add_child(neck)
 
-head_joint = gr.joint('head_joint', {-45.0, 0.0, 45.0}, {-45.0, 0.0, 45.0})
+head_joint = gr.joint('head_joint', {0.0, 0.0, 0.0}, {0.0, 0.0, 0.0})
 head_joint:translate(0.0, 0.1, 0.0)
 neck_joint:add_child(head_joint)
 
@@ -73,7 +73,7 @@ nose:scale(0.25, 0.25, 0.25)
 nose:translate(0.0, 0.1, 1.0)
 head:add_child(nose)
 
-left_upper_arm_joint = gr.joint('left_upper_arm_joint', {-45.0, 0.0, 45.0}, {-45.0, 0.0, 45.0})
+left_upper_arm_joint = gr.joint('left_upper_arm_joint', {0.0, 0.0, 0.0}, {0.0, 0.0, 0.0})
 left_upper_arm_joint:translate(0.375, -0.2, 0.0)
 shoulder_joint:add_child(left_upper_arm_joint)
 
@@ -127,9 +127,18 @@ right_hand:scale(0.08, 0.08, 0.08)
 right_hand:set_material(white)
 right_hand_joint:add_child(right_hand)
 
+hip_joint = gr.joint('hip_joint', {0.0, 0.0, 0.0}, {0.0, 0.0, 0.0})
+hip_joint:translate(0.0, -0.5, 0.0)
+rootnode:add_child(hip_joint)
+
+hips = gr.mesh('sphere', 'hips')
+hips:scale(0.25, 0.1, 0.15)
+hips:set_material(white)
+hip_joint:add_child(hips)
+
 left_upper_leg_joint = gr.joint('left_upper_leg_joint', {-45.0, 0.0, 45.0}, {-45.0, 0.0, 45.0})
-left_upper_leg_joint:translate(0.15, -0.5, 0.0)
-rootnode:add_child(left_upper_leg_joint)
+left_upper_leg_joint:translate(0.15, -0.3, 0.0)
+hip_joint:add_child(left_upper_leg_joint)
 
 left_upper_leg = gr.mesh('sphere', 'left_upper_leg')
 left_upper_leg:scale(0.15, 0.3, 0.15)
@@ -155,8 +164,8 @@ left_foot:set_material(white)
 left_foot_joint:add_child(left_foot)
 
 right_upper_leg_joint = gr.joint('right_upper_leg_joint', {-45.0, 0.0, 45.0}, {-45.0, 0.0, 45.0})
-right_upper_leg_joint:translate(-0.15, -0.5, 0.0)
-rootnode:add_child(right_upper_leg_joint)
+right_upper_leg_joint:translate(-0.15, -0.3, 0.0)
+hip_joint:add_child(right_upper_leg_joint)
 
 right_upper_leg = gr.mesh('sphere', 'right_upper_leg')
 right_upper_leg:scale(0.15, 0.3, 0.15)

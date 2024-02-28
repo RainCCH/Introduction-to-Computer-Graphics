@@ -81,11 +81,11 @@ Debug/A3.o: ../A3.cpp ../A3.hpp \
  ../../shared/include/glm/integer.hpp \
  ../../shared/include/glm/detail/func_integer.hpp \
  ../../shared/include/glm/detail/func_integer.inl ../SceneNode.hpp \
- ../Material.hpp ../scene_lua.hpp \
+ ../Material.hpp ../JointNode.hpp ../scene_lua.hpp \
  ../../shared/cs488-framework/GlErrorCheck.hpp \
  ../../shared/cs488-framework/MathUtils.hpp ../GeometryNode.hpp \
- ../JointNode.hpp ../../shared/imgui/imgui.h \
- ../../shared/imgui/imconfig.h ../../shared/include/glm/gtc/type_ptr.hpp \
+ ../../shared/imgui/imgui.h ../../shared/imgui/imconfig.h \
+ ../../shared/include/glm/gtc/type_ptr.hpp \
  ../../shared/include/glm/gtc/../gtc/quaternion.hpp \
  ../../shared/include/glm/gtc/../gtc/../gtc/constants.hpp \
  ../../shared/include/glm/gtc/../gtc/../gtc/constants.inl \
@@ -185,11 +185,11 @@ Debug/A3.o: ../A3.cpp ../A3.hpp \
 ../../shared/include/glm/detail/func_integer.inl:
 ../SceneNode.hpp:
 ../Material.hpp:
+../JointNode.hpp:
 ../scene_lua.hpp:
 ../../shared/cs488-framework/GlErrorCheck.hpp:
 ../../shared/cs488-framework/MathUtils.hpp:
 ../GeometryNode.hpp:
-../JointNode.hpp:
 ../../shared/imgui/imgui.h:
 ../../shared/imgui/imconfig.h:
 ../../shared/include/glm/gtc/type_ptr.hpp:
