@@ -72,6 +72,7 @@ protected:
 	void update_trackball_rotation(double x, double y);
 	void update_joints(double x, double y);
 	void update_joints_transformations();
+	void update_joints_from_data();
 	void undo_joints();
 	void redo_joints();
 	void renderSceneNode(const SceneNode *node, glm::mat4 model, std::stack<glm::mat4> st);

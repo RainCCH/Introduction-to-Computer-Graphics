@@ -358,6 +358,7 @@ void A3::resetJoints(){
 	joint_index = 0;
 	m_joints_transformations.clear();
 	m_joints_transformations.push_back(m_original_nodes_transformations);
+	std::fill(selected.begin(), selected.end(), false);
 }
 
 void A3::resetAll(){
@@ -735,12 +736,32 @@ void A3::update_joints_transformations(){
 	m_joints_transformations.push_back(joint_trans);
 }
 
+void A3::update_joints_from_data(){
+	if(joint_index >= m_joints_transformations.size()) return;
+	std::queue<SceneNode*> q;
+	q.push(m_rootNode.get());
+	while(!q.empty()){
+		SceneNode *cur = q.front();
+		q.pop();
+		if(cur->m_nodeType == NodeType::JointNode){
+			cur->set_transform(m_joints_transformations[joint_index][cur->m_name]);
+		}
+		for(SceneNode *child: cur->children){
+			q.push(child);
+		}
+	}
+}
+
 void A3::undo_joints(){
-	return;	
+	if(joint_index <= 0) return;
+	joint_index--;
+	update_joints_from_data();
 }
 
 void A3::redo_joints(){
-	return;
+	if(joint_index >= m_joints_transformations.size()-1) return;
+	joint_index++;
+	update_joints_from_data();
 }
 //----------------------------------------------------------------------------------------
 /*
@@ -825,6 +846,14 @@ bool A3::mouseButtonInputEvent (
 
 		CHECK_GL_ERRORS;
 	}
+	if (!ImGui::IsMouseHoveringAnyWindow() &&
+		actions == GLFW_RELEASE &&
+		m_interaction_mode == JOINTS &&
+		(button == GLFW_MOUSE_BUTTON_LEFT || button == GLFW_MOUSE_BUTTON_RIGHT)) {
+			m_joints_transformations.erase(m_joints_transformations.begin()+1+joint_index, m_joints_transformations.end());
+			joint_index++;
+			update_joints_transformations();
+		}
 
 	return eventHandled;
 }
