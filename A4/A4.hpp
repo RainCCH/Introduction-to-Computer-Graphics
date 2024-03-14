@@ -7,6 +7,10 @@
 #include "SceneNode.hpp"
 #include "Light.hpp"
 #include "Image.hpp"
+#include "Camera.hpp"
+#include "PhongMaterial.hpp"
+#include "Ray.hpp"
+
 
 void A4_Render(
 		// What to render

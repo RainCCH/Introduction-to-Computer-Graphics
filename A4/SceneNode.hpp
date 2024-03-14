@@ -3,6 +3,8 @@
 #pragma once
 
 #include "Material.hpp"
+#include "Ray.hpp"
+#include "Primitive.hpp"
 
 #include <glm/glm.hpp>
 
@@ -39,6 +41,7 @@ public:
     void rotate(char axis, float angle);
     void scale(const glm::vec3& amount);
     void translate(const glm::vec3& amount);
+    virtual bool hit(const Ray& ray, double t0, double t1, hit_record& record);
 
 
 	friend std::ostream & operator << (std::ostream & os, const SceneNode & node);

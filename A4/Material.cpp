@@ -5,5 +5,9 @@
 Material::Material()
 {}
 
+Material::Material(MaterialType type)
+    : type(type)
+{}
+
 Material::~Material()
 {}

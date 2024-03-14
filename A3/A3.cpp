@@ -698,7 +698,7 @@ void A3::update_joints(double x, double y){
 		SceneNode *cur = q.front();
 		q.pop();
 		// cout << cur->m_name << endl;
-		if(selected[cur->m_nodeId] && ImGui::IsMouseDragging(GLFW_MOUSE_BUTTON_LEFT) && cur->m_name != "head"){
+		if(selected[cur->m_nodeId] && ImGui::IsMouseDragging(GLFW_MOUSE_BUTTON_MIDDLE) && cur->m_name != "head"){
 			// cout << "selected" << endl;
 			JointNode* parent = findParentJoint(cur);
 			if(parent == nullptr) continue;
@@ -849,7 +849,7 @@ bool A3::mouseButtonInputEvent (
 	if (!ImGui::IsMouseHoveringAnyWindow() &&
 		actions == GLFW_RELEASE &&
 		m_interaction_mode == JOINTS &&
-		(button == GLFW_MOUSE_BUTTON_LEFT || button == GLFW_MOUSE_BUTTON_RIGHT)) {
+		(button == GLFW_MOUSE_BUTTON_MIDDLE || button == GLFW_MOUSE_BUTTON_RIGHT)) {
 			m_joints_transformations.erase(m_joints_transformations.begin()+1+joint_index, m_joints_transformations.end());
 			joint_index++;
 			update_joints_transformations();
